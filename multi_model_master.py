@@ -32,7 +32,8 @@ def load_feats(path):
     #print("train_p, test_p, test_n", train_p.shape, test_p.shape, np.array(test_n).shape)
     return train_p, test_p, test_n
 
-
+def get_consecutive_frames(models, pos_train_path, pos_test_path, neg_test_path):
+    
 
 # Prediction / testing
 def run_tests(models, pos_test_features, neg_test_features):
@@ -128,17 +129,17 @@ if __name__ == "__main__":
     models = dict()
     for name in pos_train_features:
         if (retrain=="True"):
-            models[name] = tune_params(pos_train_features[name], pos_test_features[name],
+            models[name], scores = tune_params(pos_train_features[name], pos_test_features[name],
              neg_test_features, retrain=True, model_name=parent_dir[:-1] + model_name +name + '.sav')
         else:
-            models[name] = tune_params(pos_train_features[name], pos_test_features[name],
+            models[name], scores = tune_params(pos_train_features[name], pos_test_features[name],
              neg_test_features, retrain=False, model_name=parent_dir[:-1] + model_name +name + '.sav')
         
-    for n in models:
-        print("Model name: ", n)
+    for k, v in models.items():
+        print("Model name: ", k, "type(model):", type(v))
 
     run_tests(models, pos_test_features, neg_test_features)
-
+    
 
     # Gather test data from all classes. For all classes, run tests and
     # calculate the scores, plot distances and confusion matrices.

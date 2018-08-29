@@ -4,7 +4,7 @@ from keras.models import Sequential
 from keras.layers import Dropout, Flatten, Dense, GlobalAveragePooling2D
 from keras import applications
 import sys, os
-from autocrop import crop_one
+#from autocrop import crop_one
 from pathlib import Path
 import skvideo.utils
 import skvideo.io
@@ -42,8 +42,8 @@ def extract_features(data_dir, model, crop=False):
     # Retrieve each file in directory.
     for file_name in os.listdir(data_dir + "videos/"):
         video_name = data_dir + "videos/" + file_name
-        if(crop==True):
-            crop_one(video_name)
+        #if(crop==True):
+        #    crop_one(video_name)
         videogenerator = skvideo.io.vreader(fname=video_name)
         video_features = []
         for frame in videogenerator:
