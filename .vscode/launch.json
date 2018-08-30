@@ -123,27 +123,15 @@
             ]
         },
         {
-            "name": "Python:moving mnist",
+            "name": "Python: pixels mMNIST",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "args": [
-                "--dest",
-                "mmnist",
-                "--filetype",
-                "jpg",
-                "--frame_size",
-                64,
-                "--seq_len",
-                120,
-                "--seqs",
-                10,
-                "--nums_per_image",
-                2,
-                "--num1",
-                0,
-                "--num2",
-                1
+                "-t",
+                "True",
+                "-n",
+                "pixel_test"
             ]
         }
     ]

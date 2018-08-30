@@ -15,30 +15,24 @@ from sklearn import metrics
 import queue
 def classify_video(model, video_features, video_name=""):
 
-    q = queue.LifoQueue(25)
-    s = 0
     this_round = 0
     max_frames = 0
-    for feature in video_features:
-        f_p = model.predict(feature.reshape(1, -1))
-        if (f_p == -1):
+
+    r = model.predict(video_features)
+    for i in r:
+        if i == -1:
             this_round += 1
-            if (this_round > max_frames):
+        elif i == 1:
+            if this_round > max_frames:
                 max_frames = this_round
-        else :
             this_round = 0
         
-        q.put(f_p)
-        s += f_p
-        if(q.full()):
-            # Check if the queue is full of negative numbers.
-            #if(s == -25):
-            #    # The last 25 frames were all considered negative.
-            #    print("PLS NO")
-            # Remove the oldest element.
-            s - q.get()
-    print("Consecutive frames classified as negative in {}: {} ".format(video_name, max_frames))
+    if this_round > max_frames:
+        max_frames = this_round
+
+    print("\nConsecutive frames classified as negative in {}: {} \n".format(video_name, max_frames))
     return max_frames
+
 
 def load_features(path):
     return np.load(open(path, 'rb'))
@@ -67,15 +61,16 @@ def tune_params(training_features, positive_test_features,
         max_dist = 0
         prec = -1
         recall= 0
+        acc = 0
         t_p = positive_test_features[np.random.choice(positive_test_features.shape[0], max_batch_size, replace=False)]
         t_n = negative_test_features[np.random.choice(negative_test_features.shape[0], max_batch_size, replace=False)]
         if( "one" in model_name):
             print("features:",  len(t_p))
             print(t_p[0])
         f = 0
-        Nus = [0.00126, 0.0025, 0.00375, 0.005, 0.675, 0.0075, 0.01, 0.05, 0.1]
+        Nus = [0.00126, 0.0025, 0.00375, 0.005, 0.675, 0.0075, 0.01, 0.015, 0.02, 0.025, 0.05, 0.1]
         #Nus = [5*10**(-0.5*i) for i in reversed(range(4, 16))]
-        gammas = [0.000001, 0.000005, 0.00001, 0.0001, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.015]
+        gammas = [0.0000001, 0.00000025, 0.0000005, 0.000001, 0.0000025, 0.000005, 0.00001, 0.0001, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.015]
         #gammas = [5*10**(-i) for i in reversed(range(4, 16))]
         best_model = None
         best_scores = (0, 0, 0)
@@ -88,16 +83,21 @@ def tune_params(training_features, positive_test_features,
                 y_p = model.predict(t_p)
                 y_n = model.predict(t_n)
                 new_f = calculate_f_score(y_p, y_n)
+                new_acc = calculate_accuracy(y_p, y_n)
                 #if  new_f > f and sum(y_n) < 0:
                 #print("new f score:", new_f, "y_p:", y_p, "y_n:", y_n)
+                #if new_acc > acc:
                 if  new_f > f:
                     f = new_f
+                    acc = new_acc
+                    #print("acc:", acc)
                     best_scores = (calculate_precision(y_p, y_n), calculate_recall(y_p), f)
                     best_nu = nu
                     best_g = g
                     #print("for Nu", nu, "and gamma", g, "y_p:", sum(y_p), "and y_n:", sum(y_n), "f score was: ", f)
                     best_model = model
         pickle.dump(best_model, open(model_name, 'wb'))
+        print(f"best nu: {best_nu}, best gamma: {best_g}, best f score: {f}")
     else:
         best_scores = (0, 0, 0)
         print("Loading saved model, model name:", model_name)

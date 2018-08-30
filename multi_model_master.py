@@ -1,7 +1,7 @@
 from metrics import (calculate_precision, calculate_recall,
     calculate_f_score)
 from occ_svm_video import (tune_params, test, load_features,
-    plot_distances, plot_confusion_matrix, plot_roc)
+    plot_distances, plot_confusion_matrix, plot_roc, classify_video)
 from featuresfromvideos import (importPreTrainedNet, extract_features)
 import argparse , os, sys
 from datetime import datetime
@@ -32,8 +32,26 @@ def load_feats(path):
     #print("train_p, test_p, test_n", train_p.shape, test_p.shape, np.array(test_n).shape)
     return train_p, test_p, test_n
 
-def get_consecutive_frames(models, pos_train_path, pos_test_path, neg_test_path):
+def get_consecutive_frames(models, pos_test_path, neg_test_path):
     
+    for name, model in models.items():
+        # get positive features one at a time and calculate number of frames
+        print(f"\n\nWorking on {name}:\n")
+        for feature in os.listdir(os.path.join(pos_test_path, name, "features")):
+            feature_path = os.path.join(
+                pos_test_path, name, "features", feature)
+            print(f"working on feature {feature_path}")
+            loaded_feature = np.load(open(feature_path, 'rb'))
+            classify_video(model, loaded_feature, feature_path.split('/')[-1])
+        for feature in os.listdir(os.path.join(neg_test_path, "features")):
+            feature_path = os.path.join(
+                neg_test_path, "features", feature)
+            print(f"working on feature {feature_path}")
+            loaded_feature = np.load(open(feature_path, 'rb'))
+            classify_video(model, loaded_feature, feature_path.split('/')[-1])
+            
+        # get negative features one at a time and calculate number of frames
+
 
 # Prediction / testing
 def run_tests(models, pos_test_features, neg_test_features):
@@ -139,7 +157,7 @@ if __name__ == "__main__":
         print("Model name: ", k, "type(model):", type(v))
 
     run_tests(models, pos_test_features, neg_test_features)
-    
+    get_consecutive_frames(models, test_pos_path, test_neg_path)
 
     # Gather test data from all classes. For all classes, run tests and
     # calculate the scores, plot distances and confusion matrices.
